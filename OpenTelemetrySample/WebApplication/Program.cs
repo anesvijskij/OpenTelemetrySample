@@ -26,7 +26,7 @@ namespace WebApplication
                     options.IncludeScopes = true;
                     options.ParseStateValues = true;
                     options.AddOtlpExporter(exporterOptions =>
-                        exporterOptions.Endpoint = new Uri("http://localhost:4317"));
+                        exporterOptions.Endpoint = new Uri("http://otel-collector:4317"));
                 }))
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }

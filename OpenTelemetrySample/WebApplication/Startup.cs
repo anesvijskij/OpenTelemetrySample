@@ -51,7 +51,7 @@ namespace WebApplication
                 builder.AddAspNetCoreInstrumentation();
                 
                 builder.AddMeter("WebApplicationMeter");
-                builder.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
+                builder.AddOtlpExporter(options => options.Endpoint = new Uri("http://otel-collector:4317"));
             });
             services.AddOpenTelemetryTracing(builder =>
             {
@@ -59,7 +59,7 @@ namespace WebApplication
                 builder.AddAspNetCoreInstrumentation();
                 
                 builder.AddSource("WebApplicationSource");
-                builder.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
+                builder.AddOtlpExporter(options => options.Endpoint = new Uri("http://otel-collector:4317"));
             });
             services.AddHttpClient();
             services.AddControllers();
