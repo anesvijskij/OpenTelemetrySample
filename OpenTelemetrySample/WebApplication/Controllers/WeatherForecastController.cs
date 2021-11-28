@@ -36,7 +36,8 @@ namespace WebApplication.Controllers
                 using var activity = Startup.WebApplicationActivitySource.StartActivity("WeatherForecast");
             
                 Startup.RequestCounter.Add(1, new KeyValuePair<string, object?>("name", nameof(Get)));
-            
+
+                
                 activity?.AddTag("Name", nameof(Get));
                 activity?.AddBaggage("SampleContext", Guid.NewGuid().ToString());
                 // outer request
@@ -45,6 +46,7 @@ namespace WebApplication.Controllers
                 Startup.RequestDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
                     tag: new KeyValuePair<string, object?>("Host", "www.ya.ru"));
             
+                activity?.AddEvent(new ActivityEvent("New Event"));
                 var rng = new Random();
                 return Enumerable.Range(1, 5).Select(index => new WeatherForecast
                     {
