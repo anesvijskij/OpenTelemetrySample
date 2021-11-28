@@ -102,7 +102,7 @@ services:
       org.label-schema.group: "logging"
 
   otel-collector:
-      image: otel/opentelemetry-collector:0.40.0
+      image: otel/opentelemetry-collector-contrib:0.40.0
       command: [ "--config=/etc/otel-collector-config.yaml" ]
       volumes:
         - ./output:/etc/output:rw

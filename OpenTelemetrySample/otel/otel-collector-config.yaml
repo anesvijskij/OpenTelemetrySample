@@ -16,13 +16,18 @@ exporters:
   file:
     path: /etc/output/logs.json
     
+  # Couldn't establish connection with local instance of elastic, when TLS is disabled  
   #otlp/elastic:
   #  endpoint: "http://elasticsearch:9300"
   #  tls:
   #    insecure: true
+  
+  # deprected
   #elasticsearch:
   #  endpoints: [elasticsearch:9200]
   #  insecure: true
+  
+  # deprectaed
   #elastic:
   #  apm_server_url: "elasticsearch:9200"
   #  tls:
@@ -38,6 +43,10 @@ exporters:
     endpoint: jaeger-all-in-one:14250
     tls:
       insecure: true
+  
+  # Not working yet, may support only traces now
+  #azuremonitor:
+  #  instrumentation_key: <key>
       
 processors:
   batch:

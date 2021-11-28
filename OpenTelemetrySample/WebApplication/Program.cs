@@ -14,20 +14,27 @@ namespace WebApplication
     {
         public static void Main(string[] args)
         {
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            
             
             CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args).ConfigureLogging(builder => builder.AddOpenTelemetry(options =>
+            Host.CreateDefaultBuilder(args).ConfigureLogging(builder =>
                 {
-                    options.IncludeFormattedMessage = true;
-                    options.IncludeScopes = true;
-                    options.ParseStateValues = true;
-                    options.AddOtlpExporter(exporterOptions =>
-                        exporterOptions.Endpoint = new Uri("http://otel-collector:4317"));
-                }))
+                    builder.ClearProviders();
+                    builder.AddConsole();
+                    
+                    builder.AddOpenTelemetry(options =>
+                    {
+                        options.IncludeFormattedMessage = true;
+                        options.IncludeScopes = true;
+                        options.ParseStateValues = true;
+                        options.AddConsoleExporter();
+                        options.AddOtlpExporter(exporterOptions =>
+                            exporterOptions.Endpoint = new Uri("http://otel-collector:4317"));
+                    });
+                })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace WebApplication
@@ -44,6 +45,16 @@ namespace WebApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpClient();
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApplication", Version = "v1" });
+            });
+            
+            // Support collector in insecure way
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            
             // metric WebApplication
             services.AddOpenTelemetryMetrics(builder =>
             {
@@ -55,17 +66,12 @@ namespace WebApplication
             });
             services.AddOpenTelemetryTracing(builder =>
             {
+                builder.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("OpenTelemetry.WebApplication"));
                 builder.AddHttpClientInstrumentation();
                 builder.AddAspNetCoreInstrumentation();
                 
                 builder.AddSource("WebApplicationSource");
                 builder.AddOtlpExporter(options => options.Endpoint = new Uri("http://otel-collector:4317"));
-            });
-            services.AddHttpClient();
-            services.AddControllers();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApplication", Version = "v1" });
             });
         }
 
@@ -75,11 +81,13 @@ namespace WebApplication
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApplication v1"));
             }
 
             app.UseHttpsRedirection();
+            
+            app.UseSwagger();
+            app.UseSwaggerUI(c => 
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApplication v1"));
 
             app.UseRouting();
 
