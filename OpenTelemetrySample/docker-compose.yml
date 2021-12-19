@@ -8,7 +8,12 @@ services:
       dockerfile: WebApplication/Dockerfile
     ports:
       - "49166:80"
-      
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s      
       
   zipkin-all-in-one:
     image: openzipkin/zipkin:latest
@@ -111,9 +116,16 @@ services:
         - "8888:8888"   # Prometheus metrics exposed by the collector
         - "8889:8889"   # Prometheus exporter metrics
         - "4317:4317"   # OTLP gRPC receiver
+        - "13133:13133" # Health Checks
       depends_on:
         - zipkin-all-in-one
-  
+      healthcheck:
+        test: [ "CMD", "curl", "-f", "http://localhost:13133" ]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 15s
+
 volumes:
   elasticsearch:
   prometheus:

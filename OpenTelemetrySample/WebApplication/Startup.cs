@@ -5,7 +5,9 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +49,19 @@ namespace WebApplication
         {
             services.AddHttpClient();
             services.AddControllers();
+            
+            services
+                // Using an absolute URI with localhost because of https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks/issues/410
+                .AddHealthChecksUI(setup =>
+                {
+                    setup.AddHealthCheckEndpoint("Application", "http://localhost/health");
+                })
+                .AddInMemoryStorage();
+
+            services.AddHealthChecks()
+                .AddProcessAllocatedMemoryHealthCheck(1024, "Allocated Memory",
+                    tags: new[] { "Application", "Memory" });
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApplication", Version = "v1" });
@@ -93,7 +108,21 @@ namespace WebApplication
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                
+                endpoints.MapHealthChecks("/health", new HealthCheckOptions()
+                {
+                    //ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                    Predicate = r => r.Tags.Contains("Application")
+                });
+                
+                endpoints.MapHealthChecksUI(options =>
+                {
+                    options.UIPath = "/health-ui";
+                });
+            });
         }
     }
 }
