@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using WebApplication;
 
 namespace ReactApplication.Controllers
 {
@@ -17,23 +22,23 @@ namespace ReactApplication.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _webApplicationServiceLocation;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IHttpClientFactory httpClientFactory,IConfiguration configuration)
         {
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
+            
+            var servicesLocation = configuration.GetSection("Services").Get<ServicesLocation>();
+            _webApplicationServiceLocation = servicesLocation?.WebApplication ?? "localhost:49166";
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<IEnumerable<WeatherForecast>> Get()
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-                {
-                    Date = DateTime.Now.AddDays(index),
-                    TemperatureC = rng.Next(-20, 55),
-                    Summary = Summaries[rng.Next(Summaries.Length)]
-                })
-                .ToArray();
+            return await _httpClientFactory.CreateClient()
+                .GetFromJsonAsync<IEnumerable<WeatherForecast>>(_webApplicationServiceLocation + "/WeatherForecast");
         }
     }
 }

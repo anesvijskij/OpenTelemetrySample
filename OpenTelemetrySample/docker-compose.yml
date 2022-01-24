@@ -13,20 +13,59 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 15s      
+      start_period: 15s  
+    environment:
+      #- Serilog__WriteTo__0__Args__requestUri=http://logstash:28080
+      - Services__ElasticsearchUriHealthCheck=http://elasticsearch:9200
+      - Services__KibanaUriHealthCheck=http://kibana:5601
+      - Services__PrometheusUriHealthCheck=http://prometheus:9090
+      - Services__GrafanaUriHealthCheck=http://grafana:3000
+      - Services__ZipkinUriHealthCheck=http://zipkin-all-in-one:9411
+      - Services__JaegerUriHealthCheck=http://jaeger-all-in-one:16687
+      - Services__OtelCollectorHealthCheck=http://otel-collector:13133
+      - Services__OtelCollector=http://otel-collector:4317
+      - WeatherKeys__AppId=key
       
+      
+      
+  reactapplication:
+    image: ${DOCKER_REGISTRY-}reactapplication
+    build:
+      context: .
+      dockerfile: ReactApplication/Dockerfile
+    ports:
+      - "49167:80" 
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      - webapplication
+    environment:
+      - Services__ElasticsearchUriHealthCheck=http://elasticsearch:9200
+      - Services__KibanaUriHealthCheck=http://kibana:5601
+      - Services__PrometheusUriHealthCheck=http://prometheus:9090
+      - Services__GrafanaUriHealthCheck=http://grafana:3000
+      - Services__ZipkinUriHealthCheck=http://zipkin-all-in-one:9411
+      - Services__JaegerUriHealthCheck=http://jaeger-all-in-one:16687
+      - Services__OtelCollectorHealthCheck=http://otel-collector:13133
+      - Services__OtelCollector=http://otel-collector:4317
+      - Services__WebApplication=http://webapplication:80
+  
   zipkin-all-in-one:
     image: openzipkin/zipkin:latest
     ports:
       - "9411:9411"
-        
-        
+          
   jaeger-all-in-one:
     image: jaegertracing/all-in-one:latest
     ports:
       - "14250:14250"
       - "5778:5778"
       - "16686:16686"
+      - "16687:16687"
 
   prometheus:
       container_name: prometheus
@@ -67,7 +106,6 @@ services:
         - prometheus
       labels:
         org.label-schema.group: "monitoring"
-        
         
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
@@ -119,12 +157,6 @@ services:
         - "13133:13133" # Health Checks
       depends_on:
         - zipkin-all-in-one
-      healthcheck:
-        test: [ "CMD", "curl", "-f", "http://localhost:13133" ]
-        interval: 30s
-        timeout: 10s
-        retries: 3
-        start_period: 15s
 
 volumes:
   elasticsearch:

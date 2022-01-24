@@ -9,6 +9,8 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactApplication", "ReactApplication\ReactApplication.csproj", "{4597551D-2FE5-4B92-8014-45158F7A849E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{FE6BC334-4A0A-418E-98F0-7FA112135B54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{4597551D-2FE5-4B92-8014-45158F7A849E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4597551D-2FE5-4B92-8014-45158F7A849E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4597551D-2FE5-4B92-8014-45158F7A849E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE6BC334-4A0A-418E-98F0-7FA112135B54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE6BC334-4A0A-418E-98F0-7FA112135B54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE6BC334-4A0A-418E-98F0-7FA112135B54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE6BC334-4A0A-418E-98F0-7FA112135B54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

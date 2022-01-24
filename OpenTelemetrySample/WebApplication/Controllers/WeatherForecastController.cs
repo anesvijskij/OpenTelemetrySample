@@ -6,7 +6,9 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using WebApplication.Telemetry;
 
 namespace WebApplication.Controllers
 {
@@ -21,11 +23,14 @@ namespace WebApplication.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IHttpClientFactory httpClientFactory)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger,
+            IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -35,10 +40,11 @@ namespace WebApplication.Controllers
             try
             {
                 using var scope = _logger.BeginScope("{Id}", Guid.NewGuid().ToString());
-                using var activity = Startup.WebApplicationActivitySource.StartActivity("WeatherForecast");
+
+                var activity = Activity.Current;
             
-                Startup.RequestCounter.Add(1, new KeyValuePair<string, object?>("name", nameof(Get)));
-                var appId = "<Move to config>";
+                MeterData.RequestCounter.Add(1, new KeyValuePair<string, object?>("name", nameof(Get)));
+                var appId = _configuration.GetSection("WeatherKeys").Get<WeatherKeys>()?.AppId; 
                 
                 activity?.AddTag("Name", nameof(Get));
                 activity?.AddBaggage("SampleContext", Guid.NewGuid().ToString());
@@ -63,7 +69,7 @@ namespace WebApplication.Controllers
                 }
                 finally
                 {
-                    Startup.RequestDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+                    MeterData.RequestDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
                         tag: new KeyValuePair<string, object?>("Host", "www.ya.ru"));
                 }
 
@@ -94,5 +100,10 @@ namespace WebApplication.Controllers
 
             return result;
         }
+    }
+
+    public class WeatherKeys
+    {
+        public string AppId { get; init; } 
     }
 }

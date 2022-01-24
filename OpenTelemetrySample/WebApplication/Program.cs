@@ -1,13 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using Serilog;
+using Serilog.Exceptions;
 
 namespace WebApplication
 {
@@ -15,6 +14,10 @@ namespace WebApplication
     {
         public static void Main(string[] args)
         {
+            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+            Activity.ForceDefaultIdFormat = true;
+            
+            // Serilog self logger
             Serilog.Debugging.SelfLog.Enable(Console.Error);
 
             Log.Logger = new LoggerConfiguration()
@@ -30,13 +33,22 @@ namespace WebApplication
             {
                 Log.CloseAndFlush();
             }
-            
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog()
-                .ConfigureLogging(builder =>
+                .UseSerilog((hostContext, serviceProvider, loggerConfiguration) =>
+                {
+                    loggerConfiguration
+                        .ReadFrom.Configuration(hostContext.Configuration)
+                        .ReadFrom.Services(serviceProvider)
+                        .Enrich.FromLogContext()
+                        .Enrich.WithExceptionDetails()
+                        .Enrich.WithCorrelationId()
+                        .Enrich.WithClientIp()
+                        .Enrich.WithClientAgent();
+                })
+                .ConfigureLogging((hostContext, builder) =>
                 {
                     builder.ClearProviders();
                     builder.AddConsole();
@@ -50,7 +62,8 @@ namespace WebApplication
                         options.ParseStateValues = true;
                         options.AddConsoleExporter();
                         options.AddOtlpExporter(exporterOptions =>
-                            exporterOptions.Endpoint = new Uri("http://otel-collector:4317"));
+                            exporterOptions.Endpoint = new Uri(hostContext.Configuration.GetSection("Services")
+                                .Get<ServicesLocation>().OtelCollector));
                     });
                 })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
